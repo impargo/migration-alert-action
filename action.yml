@@ -1,0 +1,51 @@
+name: 'migrations alert'
+description: 'alert when deploying the migrations'
+inputs:
+  SLACK_WEBHOOK: 
+    description: 'alert reciever'
+    required: true
+  ENVIRONMENT: 
+    description: 'dev|prod'
+runs:
+  using: "composite"
+  steps:
+    - name: Debug
+      shell: bash
+      run: |
+        ls -l
+        pwd
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        list-files: shell
+        filters: |
+          changed:
+            - "**/migrations/*"
+    - name: Migration alert
+      id: migration-alert
+      shell: bash
+      run: |
+        set -x
+        msg="Migration of ${ENVIRONMENT}%0A"
+        for file in ${FILES[@]}
+          do
+            if [ -f "$file" ]; then
+              GIT_USER_NAME=$(git blame --line-porcelain "$file" | sed -n 's/^author //p' | sort | uniq -c | sort -rn | awk 'FNR == 1{ print $2}')
+              slackname=$(.github/scripts/map_dev_names.sh "$GIT_USER_NAME") 
+              filename=$(basename $file)
+              msg+="Hey <@$slackname>, please watch $filename migration!%0A"
+            fi
+        done
+        echo "::set-output name=MESSAGE::${msg}"
+      env:
+        FILES: ${{ steps.filter.outputs.changed_files }}  
+    - name: Slack notification
+      if: steps.filter.outputs.changed_files
+      uses: rtCamp/action-slack-notify@v2.2.0
+      env:
+        SLACK_USERNAME: "Migrations"
+        SLACK_WEBHOOK: ${{ inputs.SLACK_WEBHOOK }}
+        SLACK_TITLE:  migrations-${{ inputs.ENVIRONMENT }}
+        SLACK_MESSAGE: ${{ steps.migration-alert.outputs.MESSAGE }}
+        SLACK_CHANNEL: "cd-status"
+        SLACK_LINK_NAMES: "true"
