@@ -31,7 +31,7 @@ runs:
           do
             if [ -f "$file" ]; then
               GIT_USER_NAME=$(git blame --line-porcelain "$file" | sed -n 's/^author //p' | sort | uniq -c | sort -rn | awk 'FNR == 1{ print $2}')
-              slackname=$(.github/scripts/map_dev_names.sh "$GIT_USER_NAME") 
+              slackname=$(bash .github/scripts/map_dev_names.sh "$GIT_USER_NAME") 
               filename=$(basename $file)
               msg+="Hey <@$slackname>, please watch $filename migration!%0A"
             fi
