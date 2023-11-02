@@ -31,7 +31,7 @@ runs:
               msg+="Hey <@$slackname>, Kindly monitor the progress of the $filename migration. Thank you%0A"
             fi
         done
-        echo "::set-output name=MESSAGE::${msg}"
+        echo "MESSAGE=${msg}" >> "$GITHUB_OUTPUT"
       env:
         FILES: ${{ inputs.CHANGED_FILES }}
         HEADER: ${{ inputs.HEADER_MSG }}
