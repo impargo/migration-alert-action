@@ -21,14 +21,14 @@ runs:
       shell: bash
       run: |
         set -x
-        msg="$HEADER"
+        msg="$HEADER\n"
         for file in ${FILES[@]}
           do
             if [[ -f "$file" && "$file" != *.test.ts ]]; then
               GIT_USER_NAME=$(git blame --line-porcelain "$file" | sed -n 's/^author //p' | sort | uniq -c | sort -rn | awk 'FNR == 1{ print $2}')
               slackname=$(bash .github/scripts/map_dev_names.sh "$GIT_USER_NAME") 
               filename=$(basename $file)
-              msg+="Hey <@$slackname>, Kindly monitor the progress of the $filename migration. Thank you%0A"
+              msg+="Hey <@$slackname>, Kindly monitor the progress of the $filename migration. Thank you ...\n"
             fi
         done
         echo "MESSAGE=${msg}" >> "$GITHUB_OUTPUT"
